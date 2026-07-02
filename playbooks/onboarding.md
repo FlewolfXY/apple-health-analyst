@@ -9,9 +9,9 @@ the product.
 
 ```
 - [ ] 1. Locate the export & set expectations
-- [ ] 2. Run inventory.py -> present the skill tree
-- [ ] 3. Run build_daily.py; while it runs, interview the user
-- [ ] 4. Create analysis/ state files
+- [ ] 2. Run onboard.py; while it runs, interview the user
+- [ ] 3. Present the skill tree, traps, notable periods and behavior shifts
+- [ ] 4. Confirm analysis/ state files exist
 - [ ] 5. Mine findings: breadth first, then loudness
 - [ ] 6. Write first_report.md (template below)
 - [ ] 7. Hand over: guided questions + the data's questions back
@@ -25,25 +25,18 @@ Before parsing, tell the user, briefly:
 - the first pass takes a minute or two;
 - at the end they get a report **and** a standing analyst they can question.
 
-### 2. Inventory -> skill tree
+### 2. Run the onboarding wrapper
 
 ```bash
-python3 scripts/inventory.py export.xml --json analysis/inventory.json
+SKILL_DIR="$HOME/.cursor/skills/apple-health-analyst"
+python3 "$SKILL_DIR/scripts/onboard.py" export.xml --out analysis/
 ```
 
-Relay the skill tree **as capabilities, not record types**. Two rules:
-- Lead with what is unlocked and strong, mention what is absent without blame.
-- If traps were detected, mention 1-2 in one line each ("two apps write your
-  sleep — naively summed that reads 20 h/night; I'll union-merge intervals").
-  Showing a dodged trap is the cheapest way to earn trust. Do not lecture.
+If this skill is project-local rather than installed in `~/.cursor/skills`, set
+`SKILL_DIR` to the directory containing `SKILL.md`.
 
-### 3. Build the daily table — and interview the user while it runs
-
-```bash
-python3 scripts/build_daily.py export.xml --out analysis/
-```
-
-The build takes a minute or two. Use that time for the **onboarding
+The wrapper runs inventory + daily-table building + state-file initialization.
+It takes a minute or two. Use that time for the **onboarding
 interview** — three questions, no more (the user just arrived; don't make
 them fill out a form):
 
@@ -59,17 +52,26 @@ them fill out a form):
 If the user is away or answers briefly, fine — the report template has an
 interview section for async answers. Never invent or assume answers.
 
-When the build finishes, relay `traps_applied` (numbers included, e.g. "naive
-step summing would have inflated by 63%"). This is the last time cleaning is
-mentioned; from here on it is silent infrastructure.
+### 3. Present skill tree, traps and question hooks
 
-### 4. Create state files
+Read `analysis/inventory.json` and `analysis/meta.json`. Relay the skill tree
+**as capabilities, not record types**. Three rules:
 
-- `analysis/STATE.md` — export path/date, rows, columns available, report
-  path, "no open experiments".
-- `analysis/findings.md` — header only.
-- `analysis/events.csv` — header `date,event,category`; if the user has an
-  existing events file, copy it in.
+- Lead with what is unlocked and strong; mention what is absent without blame.
+- Mention 1-2 data traps that were fixed, with receipts from `traps_applied`
+  (e.g. "naive step summing would have inflated by 63%"). Showing a dodged trap
+  is the cheapest way to earn trust. Do not lecture.
+- Mention 1-3 data-derived question hooks from `notable_periods` and
+  `behavior_changes`: "the sensors saw X; do you know what was happening?"
+
+### 4. Confirm state files
+
+Confirm these files exist (the wrapper creates them):
+
+- `analysis/STATE.md`
+- `analysis/findings.md`
+- `analysis/events.csv`
+- `analysis/experiments/`
 
 ### 5. Mine findings: breadth first, then loudness
 
@@ -88,6 +90,11 @@ Candidate recipes per domain:
 - **Recovery trend**: yearly mean `resting_hr`, `hrv_sdnn_ms`, `vo2max`.
   Direction consistent across all three = strong; check workout frequency
   before calling a VO2max decline real (see cardio playbook).
+- **Running / fitness**: if `running_speed_kmh`, `running_pace_min_km`,
+  `running_power_w`, `heart_rate_recovery_1min`, or `six_min_walk_m` have
+  enough coverage, use them as supporting evidence. Check
+  `meta.json > columns > {column}.coverage_pct` first; sparse columns can
+  support a story but should not carry one alone.
 - **Activity-sleep coupling**: correlation of `steps` vs same-night
   `sleep_onset_hr` and next-day `hrv_sdnn_ms` (see sleep playbook caps).
 - **Gait / strength proxies**: yearly means of `walk_speed_kmh`,
@@ -106,6 +113,10 @@ Candidate recipes per domain:
   only the user knows *why*.
 
 Grade every finding 🟢🟡🟠 per SKILL.md.
+
+Coverage rule: if a column has `<5%` coverage or `<30` observations in
+`meta.json > columns`, cap conclusions based on that column at 🟡. If it has
+`<10` observations, use it only as context.
 
 ### 6. Write the report
 

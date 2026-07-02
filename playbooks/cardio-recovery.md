@@ -10,6 +10,10 @@
 | `wrist_temp_c` | Medium | Nightly deviation from personal baseline; rises with illness, cycle phase, hot rooms. |
 | `spo2_pct` | Low-medium | Wrist SpO2 is noisy; only flag sustained drops below ~94 across many nights. |
 | `vo2max` | Trend only | **Estimated** — see the fake-decline trap below. |
+| `walking_hr_avg` | Medium | Useful context for cardio efficiency during ordinary walking. |
+| `heart_rate_recovery_1min` | Medium | Sparse but meaningful after workouts; higher recovery usually means better fitness. |
+| `six_min_walk_m` | Medium | Mobility/cardio proxy. Coverage is often sparse; check `meta.json > columns`. |
+| `running_speed_kmh` / `running_pace_min_km` / `running_power_w` | Medium | Workout-only. Use as supporting evidence for running progress, not whole-body fitness alone. |
 | `hr_min/mean/max` | Context | Raw daily HR stats; hr_min ≈ crude RHR proxy when resting_hr missing. |
 
 ## Investigation recipes
@@ -36,8 +40,10 @@
 around it; report peak deltas and days-to-baseline. Useful for "how hard did
 that flu hit me" and for calibrating the user's trust in the signals.
 
-**Fitness trajectory**: yearly means of vo2max + running pace from workouts +
-RHR. Three signals agreeing = 🟢. One signal alone = 🟡 max.
+**Fitness trajectory**: yearly means of vo2max + workout count + running
+pace/speed/power (if present) + RHR/HRV. Three signals agreeing = 🟢. One
+signal alone = 🟡 max. Always check `meta.json > columns` for sparse metrics
+before leaning on them.
 
 ## The VO2max fake-decline trap (check before every fitness verdict)
 

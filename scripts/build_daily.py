@@ -64,6 +64,9 @@ MEAN_TYPES = {
     Q + "HeartRateVariabilitySDNN": "hrv_sdnn_ms",
     Q + "RespiratoryRate": "resp_rate_brpm",
     Q + "OxygenSaturation": "spo2_pct",
+    Q + "WalkingHeartRateAverage": "walking_hr_avg",
+    Q + "HeartRateRecoveryOneMinute": "heart_rate_recovery_1min",
+    Q + "SixMinuteWalkTestDistance": "six_min_walk_m",
     Q + "WalkingSpeed": "walk_speed_kmh",
     Q + "WalkingStepLength": "step_length_cm",
     Q + "WalkingDoubleSupportPercentage": "double_support_pct",
@@ -71,6 +74,11 @@ MEAN_TYPES = {
     Q + "AppleWalkingSteadiness": "walking_steadiness_pct",
     Q + "StairAscentSpeed": "stair_up_mps",
     Q + "StairDescentSpeed": "stair_down_mps",
+    Q + "RunningSpeed": "running_speed_kmh",
+    Q + "RunningPower": "running_power_w",
+    Q + "RunningVerticalOscillation": "running_vertical_cm",
+    Q + "RunningGroundContactTime": "running_ground_contact_ms",
+    Q + "RunningStrideLength": "running_stride_m",
     Q + "PhysicalEffort": "physical_effort_met",
 }
 
@@ -93,12 +101,15 @@ COLUMNS = [
     "sleep_anomaly",
     "resting_hr", "hr_min", "hr_mean", "hr_max", "hrv_sdnn_ms",
     "resp_rate_brpm", "spo2_pct", "wrist_temp_c",
+    "walking_hr_avg", "heart_rate_recovery_1min", "six_min_walk_m",
     "steps", "distance_km", "cycling_km", "flights",
     "active_kcal", "basal_kcal", "exercise_min", "stand_min",
     "physical_effort_met",
     "walk_speed_kmh", "step_length_cm", "double_support_pct",
     "walk_asymmetry_pct", "walking_steadiness_pct",
     "stair_up_mps", "stair_down_mps",
+    "running_speed_kmh", "running_pace_min_km", "running_power_w",
+    "running_vertical_cm", "running_ground_contact_ms", "running_stride_m",
     "headphone_db_avg", "headphone_hours", "env_db_avg",
     "daylight_min", "mindful_min", "menstrual_flow", "vo2max",
     "workout_count", "workout_min", "workout_types",
@@ -321,6 +332,10 @@ def main():
         day_vals[day]["workout_count"] = cnt
         day_vals[day]["workout_min"] = mins
         day_vals[day]["workout_types"] = "+".join(sorted(types))
+    for day, vals in list(day_vals.items()):
+        speed = vals.get("running_speed_kmh")
+        if speed and speed > 0:
+            vals["running_pace_min_km"] = 60.0 / speed
 
     # --- Sleep: union merge, then assign to wake-day window ------------------
     n_sleep_nights = 0
@@ -381,6 +396,8 @@ def main():
     end = date(int(d1[:4]), int(d1[5:7]), int(d1[8:10]))
     csv_path = os.path.join(args.out, "daily.csv")
     nonnull = Counter()
+    col_first = {}
+    col_last = {}
     rows = 0
     with open(csv_path, "w", newline="") as f:
         w = csv.writer(f)
@@ -395,6 +412,9 @@ def main():
                     row.append("")
                 else:
                     nonnull[col] += 1
+                    if col not in col_first:
+                        col_first[col] = day
+                    col_last[col] = day
                     row.append(round(v, 2) if isinstance(v, float) else v)
             w.writerow(row)
             rows += 1
@@ -413,6 +433,16 @@ def main():
         "date_range": {"first": d0, "last": d1},
         "sleep_nights": n_sleep_nights,
         "columns_nonnull": dict(nonnull),
+        "columns": {
+            col: {
+                "n": nonnull.get(col, 0),
+                "first": col_first.get(col),
+                "last": col_last.get(col),
+                "coverage_pct": round(nonnull.get(col, 0) / rows * 100, 1)
+                if rows else 0.0,
+            }
+            for col in COLUMNS[1:]
+        },
         "traps_applied": traps_applied,
         "notable_periods": notable,
         "behavior_changes": behavior,

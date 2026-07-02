@@ -106,16 +106,21 @@ analysis/
 
 ## Scripts
 
-Both are stdlib-only, stream the XML (constant memory), and are safe on
+The scripts are stdlib-only, stream the XML (constant memory), and are safe on
 multi-GB exports. Run them; do not reimplement them ad hoc.
 
-```bash
-# 1. Map the data: what exists, what it unlocks, which traps are present
-python3 scripts/inventory.py /path/to/export.xml --json analysis/inventory.json
+When installed as a personal skill, use:
 
-# 2. Build the cleaned daily table (applies all trap fixes, ~1-3 min)
-python3 scripts/build_daily.py /path/to/export.xml --out analysis/
+```bash
+SKILL_DIR="$HOME/.cursor/skills/apple-health-analyst"
+
+# One-command setup: inventory + daily table + state files
+python3 "$SKILL_DIR/scripts/onboard.py" /path/to/export.xml --out analysis/
 ```
+
+If this skill lives in a project instead, set `SKILL_DIR` to that skill
+directory (the one containing `SKILL.md`). Avoid relative `scripts/...` paths
+unless the current working directory is the skill repository itself.
 
 For everything downstream, query `analysis/daily.csv` directly (pandas or
 stdlib). Never re-parse `export.xml` for a question the daily table can answer.
