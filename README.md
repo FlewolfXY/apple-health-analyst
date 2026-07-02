@@ -2,10 +2,12 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-A Cursor Agent Skill for Apple Health exports.
+A Cursor-first, agent-agnostic workflow for Apple Health exports.
 
 It turns `export.xml` into a local, evidence-graded health analysis workspace:
-first a report, then an analyst you can keep asking questions.
+first a report, then an analyst you can keep asking questions. Cursor can load
+it as a Skill; Claude Code, Codex and other coding agents can use the same
+scripts and prompt files.
 
 ```text
 You: analyze my Apple Health export
@@ -142,11 +144,25 @@ inventing a story.
 
 ## Install
 
+For Cursor:
+
 ```bash
 mkdir -p ~/.cursor/skills
 git clone https://github.com/FlewolfXY/apple-health-analyst \
   ~/.cursor/skills/apple-health-analyst
 ```
+
+For Claude Code, Codex or other agents, clone it anywhere:
+
+```bash
+git clone https://github.com/FlewolfXY/apple-health-analyst
+```
+
+Then point the agent to:
+
+- `CLAUDE.md` for Claude Code;
+- `AGENTS.md` for Codex or other coding agents;
+- `prompts/apple-health-analyst.md` for a portable prompt.
 
 ## Use
 
@@ -164,6 +180,13 @@ python3 ~/.cursor/skills/apple-health-analyst/scripts/onboard.py \
 
 The scripts use only the Python standard library and stream the XML, so
 multi-GB exports are safe.
+
+If you are not using Cursor, run the same wrapper with an absolute path:
+
+```bash
+python3 /path/to/apple-health-analyst/scripts/onboard.py \
+  /path/to/export.xml --out /path/to/export-folder/analysis/
+```
 
 ## Privacy
 

@@ -2,10 +2,11 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-一个用于分析 Apple Health 导出的 Cursor Agent Skill。
+一个 Cursor-first、但不绑定 Cursor 的 Apple Health 分析工作流。
 
 它会把 `export.xml` 变成一个本地的、可持续追问的健康数据分析工作区:
-先给你一份报告,然后留下一个能继续查问题的分析师。
+先给你一份报告,然后留下一个能继续查问题的分析师。Cursor 可以把它作为 Skill
+加载;Claude Code、Codex 和其他 coding agent 也可以使用同一套脚本和 prompt。
 
 ```text
 你: 分析我的 Apple Health 导出
@@ -135,11 +136,25 @@ Apple Health 本身看不到。测不出时就直说,而不是硬编一个答案
 
 ## 安装
 
+Cursor 用户:
+
 ```bash
 mkdir -p ~/.cursor/skills
 git clone https://github.com/FlewolfXY/apple-health-analyst \
   ~/.cursor/skills/apple-health-analyst
 ```
+
+Claude Code、Codex 或其他 agent 用户,可以把仓库 clone 到任意位置:
+
+```bash
+git clone https://github.com/FlewolfXY/apple-health-analyst
+```
+
+然后让 agent 读取对应入口:
+
+- Claude Code: `CLAUDE.md`
+- Codex / 其他 coding agents: `AGENTS.md`
+- 通用可复制 prompt: `prompts/apple-health-analyst.md`
 
 ## 使用
 
@@ -156,6 +171,13 @@ python3 ~/.cursor/skills/apple-health-analyst/scripts/onboard.py \
 ```
 
 脚本只使用 Python 标准库,并且流式解析 XML,GB 级导出也可以处理。
+
+如果不使用 Cursor,也可以用绝对路径直接运行同一个 wrapper:
+
+```bash
+python3 /path/to/apple-health-analyst/scripts/onboard.py \
+  /path/to/export.xml --out /path/to/export-folder/analysis/
+```
 
 ## 隐私
 
