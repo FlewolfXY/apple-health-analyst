@@ -1,0 +1,15 @@
+# Never commit personal health data
+*.xml
+*.zip
+apple_health_export*/
+export_cda*
+electrocardiograms/
+workout-routes/
+analysis/
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
